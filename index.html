@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARENA — Batalha dos Setores</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=Cinzel:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#051f2c;
+    --panel:rgba(255,255,255,.045);
+    --panel-border:rgba(255,255,255,.09);
+    --text:#fbf4e6;
+    --muted:#b3a489;
+    --gold:#c99a5b;
+    --display:'Sora',system-ui,-apple-system,sans-serif;
+    --body:'Inter',system-ui,-apple-system,sans-serif;
+    --brand:'Cinzel','Sora',serif;
+    --ease-out-expo:cubic-bezier(.16,1,.3,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{
+    background:var(--bg);color:var(--text);font-family:var(--body);
+    display:flex;flex-direction:column;
+  }
+
+  /* ===== fundo aurora ===== */
+  .bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .bg::after{
+    content:"";position:absolute;inset:0;
+    background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+    background-size:64px 64px;
+    mask-image:radial-gradient(ellipse 90% 70% at 50% 40%,#000 30%,transparent 75%);
+  }
+  .blob{position:absolute;border-radius:50%;filter:blur(110px);opacity:.5;animation:drift 26s var(--ease-out-expo) infinite alternate}
+  .blob.b1{width:46vw;height:46vw;left:-12vw;top:-18vw;background:#0d3a4e}
+  .blob.b2{width:40vw;height:40vw;right:-10vw;top:-8vw;background:#441d19;animation-delay:-9s}
+  .blob.b3{width:36vw;height:36vw;left:30vw;bottom:-22vw;background:#5c3c1b;animation-delay:-17s}
+  @keyframes drift{
+    from{transform:translate(0,0) scale(1)}
+    to{transform:translate(6vw,4vh) scale(1.15)}
+  }
+
+  /* ===== topo ===== */
+  header{
+    position:relative;z-index:2;
+    display:flex;align-items:center;gap:1.6vw;
+    padding:1.6vh 2.6vw 1.2vh;
+  }
+  .brand{display:flex;align-items:center;gap:1vw}
+  .brand .logo{
+    height:6.8vh;width:auto;flex:none;
+    filter:drop-shadow(0 0 16px rgba(201,154,91,.45));
+  }
+  .brand h1{font-family:var(--brand);font-size:2.7vh;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .brand h1 em{font-style:normal;color:var(--gold)}
+  .month-pill{
+    font-size:1.6vh;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    border:1px solid var(--panel-border);border-radius:99px;
+    padding:.7vh 1.4vw;color:var(--muted);background:var(--panel);white-space:nowrap;
+  }
+  .sync{
+    display:flex;align-items:center;gap:.5vw;white-space:nowrap;
+    font-size:1.4vh;font-weight:600;color:var(--muted);
+    border:1px solid var(--panel-border);border-radius:99px;
+    padding:.7vh 1.2vw;background:var(--panel);
+  }
+  .sync i{width:1vh;height:1vh;border-radius:50%;background:#4ade80;box-shadow:0 0 8px #4ade80;flex:none}
+  .sync.off i{background:#fbbf24;box-shadow:0 0 8px #fbbf24}
+  .pace-wrap{flex:1;max-width:30vw;margin:0 auto}
+  .pace-label{display:flex;justify-content:space-between;font-size:1.5vh;color:var(--muted);margin-bottom:.6vh}
+  .pace-label b{color:var(--text)}
+  .pace-track{height:1vh;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+  .pace-fill{height:100%;width:0;border-radius:99px;
+    background:linear-gradient(90deg,#a5753d,#dcb277);
+    box-shadow:0 0 14px rgba(201,154,91,.55);
+    transition:width 1.4s var(--ease-out-expo);
+  }
+  .clock{margin-left:auto;text-align:right}
+  .clock .time{font-family:var(--display);font-size:3.4vh;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+  .clock .date{font-size:1.5vh;color:var(--muted);text-transform:capitalize;margin-top:.4vh}
+
+  /* ===== palco / cenas ===== */
+  main{position:relative;z-index:1;flex:1;min-height:0}
+  .scene{
+    position:absolute;inset:0;
+    padding:1vh 2.6vw 1.4vh;
+    display:flex;flex-direction:column;
+    opacity:0;visibility:hidden;
+    transform:translateY(2.4vh) scale(.985);
+    transition:opacity .55s var(--ease-out-expo),transform .55s var(--ease-out-expo),visibility 0s linear .55s;
+  }
+  .scene.active{
+    opacity:1;visibility:visible;
+    transform:translateY(0) scale(1);
+    transition:opacity .55s var(--ease-out-expo) .1s,transform .55s var(--ease-out-expo) .1s,visibility 0s;
+  }
+  .scene-title{display:flex;align-items:baseline;gap:1.2vw;margin-bottom:1.6vh}
+  .scene-title h2{font-family:var(--brand);font-size:3.6vh;font-weight:700;letter-spacing:.03em}
+  .scene-title h2 .ico{height:.82em;vertical-align:-.04em;margin-right:.3vw}
+  .scene-title .sub{font-size:1.7vh;color:var(--muted)}
+  .scene-title .tag{
+    margin-left:auto;font-size:1.5vh;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    padding:.7vh 1.2vw;border-radius:99px;border:1px solid var(--panel-border);background:var(--panel);color:var(--muted);
+  }
+
+  /* ===== cena: ranking ===== */
+  .board{flex:1;display:flex;flex-direction:column;gap:1.4vh;min-height:0}
+  .row{
+    flex:1;display:flex;align-items:center;gap:1.6vw;
+    background:var(--panel);border:1px solid var(--panel-border);
+    border-radius:1.8vh;padding:0 2vw;
+    opacity:0;transform:translateX(-3vw);
+    transition:opacity .6s var(--ease-out-expo),transform .6s var(--ease-out-expo);
+    position:relative;overflow:hidden;
+  }
+  .scene.run .row{opacity:1;transform:translateX(0)}
+  .row.first{
+    border-color:rgba(201,154,91,.55);
+    background:linear-gradient(90deg,rgba(165,117,61,.14),rgba(255,255,255,.04) 55%);
+    box-shadow:0 0 40px rgba(201,154,91,.14), inset 0 0 30px rgba(201,154,91,.06);
+  }
+  .row.first::before{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(105deg,transparent 30%,rgba(216,199,178,.16) 50%,transparent 70%);
+    transform:translateX(-100%);animation:sheen 4.5s ease-in-out infinite;
+  }
+  @keyframes sheen{0%,55%{transform:translateX(-100%)}85%,100%{transform:translateX(100%)}}
+  .rank{
+    font-family:var(--display);font-weight:800;font-size:3.2vh;width:3.4vw;flex:none;
+    color:var(--muted);text-align:center;font-variant-numeric:tabular-nums;
+  }
+  .row.first .rank{color:var(--gold);text-shadow:0 0 18px rgba(201,154,91,.7)}
+  .crown{font-size:2.4vh;margin-left:.3vw;animation:bob 2.6s ease-in-out infinite;display:inline-block}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-.5vh) rotate(6deg)}}
+  .team{width:15vw;flex:none;display:flex;align-items:center;gap:.9vw}
+  .team .dot{width:1.6vh;height:1.6vh;border-radius:50%;flex:none;box-shadow:0 0 12px currentColor}
+  .team .name{font-family:var(--display);font-size:2.5vh;font-weight:700}
+  .team .who{font-size:1.4vh;color:var(--muted);margin-top:.2vh}
+  .bar-zone{flex:1;position:relative;height:3.2vh}
+  .bar-track{position:absolute;inset:0;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden}
+  .bar-fill{
+    position:absolute;left:0;top:0;bottom:0;width:100%;border-radius:99px;
+    transform:scaleX(0);transform-origin:left center;
+    transition:transform 1.4s var(--ease-out-expo);
+  }
+  .bar-fill::after{
+    content:"";position:absolute;inset:0;border-radius:99px;
+    background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.35) 50%,transparent 65%);
+    transform:translateX(-100%);animation:barsheen 3.8s ease-in-out infinite;
+  }
+  @keyframes barsheen{0%,60%{transform:translateX(-100%)}90%,100%{transform:translateX(100%)}}
+  .pace-mark{
+    position:absolute;top:-1vh;bottom:-1vh;width:2px;background:rgba(255,255,255,.5);
+    box-shadow:0 0 8px rgba(255,255,255,.5);
+  }
+  .pace-mark::after{
+    content:"ritmo";position:absolute;top:-2vh;left:50%;transform:translateX(-50%);
+    font-size:1.2vh;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  }
+  .score{width:9vw;flex:none;text-align:right}
+  .score .pct{font-family:var(--display);font-size:4.2vh;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  .score .pct small{font-size:2vh;color:var(--muted)}
+  .delta{width:10vw;flex:none;text-align:right}
+  .chip{
+    display:inline-flex;align-items:center;gap:.4vw;
+    font-size:1.5vh;font-weight:700;padding:.6vh 1vw;border-radius:99px;
+    font-variant-numeric:tabular-nums;
+  }
+  .chip.up{color:#4ade80;background:rgba(74,222,128,.12)}
+  .chip.down{color:#f87171;background:rgba(248,113,113,.10)}
+
+  /* ===== cena: setor ===== */
+  .sector-grid{flex:1;display:flex;gap:2vw;min-height:0}
+  .sector-side{
+    width:26vw;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2vh;
+    background:var(--panel);border:1px solid var(--panel-border);border-radius:2vh;padding:2vh;
+    position:relative;overflow:hidden;
+  }
+  .sector-side .glow{position:absolute;width:30vw;height:30vw;border-radius:50%;filter:blur(90px);opacity:.22;top:-12vw}
+  .ring-wrap{position:relative;width:24vh;height:24vh}
+  .ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .ring-bg{fill:none;stroke:rgba(255,255,255,.08);stroke-width:9}
+  .ring-fg{fill:none;stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset 1.6s var(--ease-out-expo)}
+  .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring-center .big{font-family:var(--display);font-size:5.6vh;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  .ring-center .big small{font-size:2.4vh;color:var(--muted)}
+  .ring-center .lbl{font-size:1.4vh;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-top:.6vh}
+  .sector-name{font-family:var(--brand);font-size:3.2vh;font-weight:700;text-align:center;line-height:1.15;z-index:1}
+  .sector-owner{font-size:1.7vh;color:var(--muted);text-align:center;z-index:1}
+  .rank-chip{
+    font-family:var(--display);font-size:1.8vh;font-weight:700;letter-spacing:.08em;
+    padding:.8vh 1.6vw;border-radius:99px;border:1px solid currentColor;z-index:1;
+  }
+  .metrics{flex:1;display:grid;grid-auto-rows:1fr;gap:1.2vh;min-height:0}
+  .metric{
+    display:flex;align-items:center;gap:1.4vw;
+    background:var(--panel);border:1px solid var(--panel-border);border-radius:1.6vh;
+    padding:0 1.8vw;min-height:0;
+    opacity:0;transform:translateY(1.6vh);
+    transition:opacity .5s var(--ease-out-expo),transform .5s var(--ease-out-expo);
+  }
+  .scene.run .metric{opacity:1;transform:translateY(0)}
+  .metric .info{width:21vw;flex:none}
+  .metric .label{font-size:1.9vh;font-weight:600;line-height:1.25}
+  .mtag{display:inline-block;margin-left:.5vw;font-size:1.2vh;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    padding:.2vh .6vw;border-radius:99px;border:1px solid var(--panel-border);color:var(--muted);vertical-align:middle}
+  .metric .who{font-size:1.4vh;color:var(--muted);margin-top:.2vh}
+  .metric .bar-zone{height:2.2vh}
+  .metric .nums{width:11.5vw;flex:none;text-align:right;font-variant-numeric:tabular-nums}
+  .metric .nums .val{font-family:var(--display);font-size:2.2vh;font-weight:700}
+  .metric .nums .goal{font-size:1.4vh;color:var(--muted)}
+  .metric .mpct{width:7.5vw;flex:none;text-align:right;font-family:var(--display);font-size:2.4vh;font-weight:800;font-variant-numeric:tabular-nums}
+  .metric .mpct .msub{font-family:var(--body);font-size:1.35vh;font-weight:700;margin-top:.3vh;letter-spacing:.02em}
+
+  /* ===== cena: hall da fama ===== */
+  .hall{flex:1;display:flex;flex-direction:column;gap:2vh;min-height:0}
+  .podium{flex:1.4;display:flex;gap:1.8vw;align-items:stretch;min-height:0}
+  .pod{
+    flex:1;border-radius:2vh;border:1px solid var(--panel-border);background:var(--panel);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;
+    position:relative;overflow:hidden;padding:2vh;
+    opacity:0;transform:translateY(3vh);
+    transition:opacity .6s var(--ease-out-expo),transform .6s var(--ease-out-expo);
+  }
+  .scene.run .pod{opacity:1;transform:translateY(0)}
+  .pod .medal{font-size:5vh}
+  .pod .pwho{font-family:var(--display);font-size:3vh;font-weight:800}
+  .pod .pwhat{font-size:1.7vh;color:var(--muted);text-align:center;max-width:80%}
+  .pod .ppct{font-family:var(--display);font-size:5vh;font-weight:800;font-variant-numeric:tabular-nums}
+  .pod .plbl{font-size:1.3vh;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-top:-.6vh}
+  .pod .psector{font-size:1.4vh;letter-spacing:.18em;text-transform:uppercase;font-weight:700;
+    padding:.5vh 1.2vw;border-radius:99px;border:1px solid currentColor}
+  .pod.gold{order:2;flex:1.25;border-color:rgba(201,154,91,.5);
+    background:linear-gradient(180deg,rgba(165,117,61,.14),rgba(255,255,255,.03));
+    box-shadow:0 0 50px rgba(201,154,91,.12)}
+  .pod.gold::before{content:"";position:absolute;inset:0;
+    background:linear-gradient(105deg,transparent 30%,rgba(216,199,178,.14) 50%,transparent 70%);
+    transform:translateX(-100%);animation:sheen 4.5s ease-in-out infinite}
+  .pod.silver{order:1}
+  .pod.bronze{order:3}
+  .pod .avwrap{position:relative;margin-bottom:.4vh}
+  .pod .avatar{width:8vh;height:8vh;border-radius:50%;display:grid;place-items:center;
+    font-family:var(--display);font-weight:800;font-size:2.8vh;color:#051f2c}
+  .pod .medal2{position:absolute;bottom:-1vh;right:-1.4vh;font-size:3.2vh;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+  .awards{flex:.9;display:flex;gap:1.8vw}
+  .award{flex:1;border-radius:2vh;border:1px solid var(--panel-border);background:var(--panel);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4vh;padding:1.4vh;text-align:center;
+    opacity:0;transform:translateY(2vh);
+    transition:opacity .5s var(--ease-out-expo),transform .5s var(--ease-out-expo)}
+  .scene.run .award{opacity:1;transform:translateY(0)}
+  .award .aicon{font-size:3vh}
+  .award .atitle{font-size:1.3vh;letter-spacing:.22em;color:var(--muted);text-transform:uppercase;font-weight:700}
+  .award .awho{font-family:var(--display);font-size:2.3vh;font-weight:800}
+  .award .aval{font-family:var(--display);font-size:2.9vh;font-weight:800;font-variant-numeric:tabular-nums}
+  .award .adet{font-size:1.4vh;color:var(--muted)}
+  .stat-strip{flex:.8;display:flex;gap:1.8vw}
+  .stat{
+    flex:1;border-radius:2vh;border:1px solid var(--panel-border);background:var(--panel);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6vh;
+    opacity:0;transform:translateY(2vh);
+    transition:opacity .5s var(--ease-out-expo),transform .5s var(--ease-out-expo);
+  }
+  .scene.run .stat{opacity:1;transform:translateY(0)}
+  .stat .sval{font-family:var(--display);font-size:4.4vh;font-weight:800;font-variant-numeric:tabular-nums}
+  .stat .slbl{font-size:1.5vh;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+  /* ===== ticker ===== */
+  .ticker{
+    position:relative;z-index:2;flex:none;
+    border-top:1px solid var(--panel-border);
+    background:rgba(255,255,255,.03);
+    display:flex;align-items:center;height:5.6vh;overflow:hidden;
+  }
+  .ticker .live{
+    flex:none;display:flex;align-items:center;gap:.6vw;
+    padding:0 1.6vw;height:100%;border-right:1px solid var(--panel-border);
+    font-family:var(--display);font-weight:800;font-size:1.8vh;letter-spacing:.2em;
+    background:rgba(110,44,36,.30);color:#f0a08d;
+  }
+  .ticker .live i{width:1.1vh;height:1.1vh;border-radius:50%;background:#d96a55;animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(217,106,85,.6)}50%{opacity:.6;box-shadow:0 0 0 .8vh rgba(217,106,85,0)}}
+  .marquee{flex:1;overflow:hidden;height:100%;display:flex;align-items:center}
+  .marquee-inner{display:flex;gap:4vw;white-space:nowrap;animation:scroll 45s linear infinite;padding-left:2vw}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  .titem{font-size:1.9vh;font-weight:500;color:#d8c7b2;display:flex;align-items:center;gap:.7vw}
+  .titem b{color:var(--text)}
+
+  /* ===== dots de navegação ===== */
+  .dots{
+    position:fixed;right:2.6vw;top:50%;transform:translateY(-50%);z-index:5;
+    display:flex;flex-direction:column;gap:1.4vh;
+  }
+  .dot-nav{
+    width:1.2vh;height:1.2vh;border-radius:99px;background:rgba(255,255,255,.18);
+    transition:all .5s var(--ease-out-expo);position:relative;
+    cursor:pointer;
+  }
+  .dot-nav:hover{background:rgba(255,255,255,.45)}
+  .dot-nav.on{height:4.6vh;background:rgba(255,255,255,.28);overflow:hidden}
+  .dot-nav.on::after{
+    content:"";position:absolute;left:0;right:0;top:0;height:0;
+    background:#fff;border-radius:99px;
+    animation:dotfill var(--scene-secs,12s) linear forwards;
+  }
+  @keyframes dotfill{to{height:100%}}
+  .paused .dot-nav.on::after{animation-play-state:paused}
+
+  /* ===== refinamentos (design review) ===== */
+  .ico{height:1em;width:auto;display:inline-block;vertical-align:-.12em}
+  .chip.mid{color:#d8c7b2;background:rgba(216,199,178,.10)}
+  .tbadge{
+    display:inline-block;font-size:1.1vh;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    border:1px solid var(--panel-border);border-radius:99px;padding:.15vh .5vw;
+    color:var(--muted);margin-right:.5vw;vertical-align:middle;
+  }
+  .board .row:not(:nth-child(1)) .pace-mark::after{content:none}
+  .metrics .metric:not(:nth-child(1)) .pace-mark::after{content:none}
+  .row.done{
+    border-color:rgba(201,154,91,.85);
+    box-shadow:0 0 46px rgba(201,154,91,.28), inset 0 0 34px rgba(201,154,91,.08);
+  }
+  .metric.done{
+    border-color:rgba(201,154,91,.6);
+    box-shadow:0 0 24px rgba(201,154,91,.16);
+  }
+  .bg .wm{
+    position:absolute;left:50%;top:55%;transform:translate(-50%,-50%);
+    height:72vh;width:auto;opacity:.045;
+  }
+  .pod .avatar{position:relative;overflow:hidden}
+  .pod .avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation:none!important;transition-duration:.01ms!important}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg">
+  <img class="wm" src="assets/brasao-grande.png" alt="">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+
+<header>
+  <div class="brand">
+    <img class="logo" src="assets/logo-autentica.png" alt="Autentica">
+    <h1>Arena <em>dos Setores</em></h1>
+  </div>
+  <div class="month-pill" id="monthPill">—</div>
+  <div class="sync" id="syncBadge"><i></i><span>conectando…</span></div>
+  <div class="pace-wrap">
+    <div class="pace-label"><span>Progresso do mês</span><span><b id="paceDay">—</b> · ritmo <b id="pacePct">—</b></span></div>
+    <div class="pace-track"><div class="pace-fill" id="paceFill"></div></div>
+  </div>
+  <div class="clock">
+    <div class="time" id="clockTime">--:--</div>
+    <div class="date" id="clockDate"></div>
+  </div>
+</header>
+
+<main id="stage"></main>
+
+<div class="ticker">
+  <div class="live"><i></i> AO VIVO</div>
+  <div class="marquee"><div class="marquee-inner" id="tickerInner"></div></div>
+</div>
+
+<div class="dots" id="dots"></div>
+
+<script>
+/* ============================================================
+   ⚙️ CONFIG — mexa aqui
+   ============================================================ */
+const CONFIG = {
+  planilhaId: "1Bt6v-r3u25RRekWqpuhfUAylteadX6zU", // id da planilha no Google
+  aba: "",              // gid da aba (vazio = primeira aba)
+  atualizarMin: 5,      // re-busca a planilha a cada X minutos
+  segundosPorCena: 12,  // tempo de cada tela
+  segundosRanking: 16,  // a tela de ranking fica um pouco mais
+  notaSe: /nps|nota|m[ée]di[ao]|satisfa|\bps\b/i, // metas de NOTA (NPS, PS…) ficam FORA do placar — a arena é só volume
+  foraDoPlacar: [],                                // pessoas excluídas do placar de um setor: { setor:"X", quem:/^nome$/i }
+  secaoSeparada: [                                 // pessoas/metas que viram um time próprio na arena
+    /* regras casam por quem (nome), cargo e/ou meta (descrição); sem "de:", busca em todos os setores;
+       regras com o mesmo "nome" somam no mesmo time */
+    { quem:/^alan$/i,      nome:"Alan", lider:"Especialista", cor:"#d96a55", tipo:"individual" },
+    { meta:/postagens no instagram do alan/i, nome:"Alan", lider:"Especialista", cor:"#d96a55", tipo:"individual" }, // posts do Alan (lançados pela Coord)
+    { quem:/^willian$/i,   nome:"Will", lider:"Especialista", cor:"#7fb3d5", tipo:"individual" }, // não pega "Willian Trezzi"
+    { quem:/^gabriella$/i, cargo:/^coo$/i, nome:"Gabi", lider:"COO", cor:"#d8c7b2", tipo:"individual" }, // só a COO — a Coord fica no Marketing
+    { quem:/^lucas$/i, nome:"CS" }, // a indicação do Lucas entra no time das indicações (CS)
+  ],
+};
+
+/* cor e responsável de cada setor (o resp. vem da planilha quando preenchido) */
+const SETOR_INFO = {
+  "Mentores":  { cor:"#74a892", lider:"",            tipo:"setor" },
+  "CS":        { cor:"#9bbf8c", lider:"Arthur",      tipo:"setor" },
+  "Marketing": { cor:"#c2718a", lider:"",            tipo:"setor" },
+  "Comercial": { cor:"#c99a5b", lider:"",            tipo:"setor" },
+  "Diretores": { cor:"#b3a489", lider:"Will & Gabi", tipo:"setor" },
+};
+
+/* ============================================================
+   🛟 FALLBACK — usado só se a planilha estiver inacessível
+   ============================================================ */
+const FALLBACK = {
+  mes:"Junho 2025", diaAtual:9, diasNoMes:30,
+  setores:[
+    { nome:"Mentores", lider:"Artur", metricas:[
+      { who:"Elaine", resp:"Cons de imagem", label:"PS de Consultorias de imagem", meta:5, atingido:5 },
+      { who:"Lucas",  resp:"Mentor", label:"Indicação de possíveis Be Master", meta:24, atingido:0 },
+      { who:"Luan",   resp:"Mentor", label:"NPS Médio em todas Id Visuais", meta:5, atingido:0 },
+    ]},
+    { nome:"CS", lider:"", metricas:[
+      { who:"Thomaz", resp:"CS", label:"Indicação", meta:16, atingido:2 },
+      { who:"Diego",  resp:"CS", label:"Indicação", meta:16, atingido:0 },
+    ]},
+    { nome:"Marketing", lider:"Hyago", metricas:[
+      { who:"Gabriella", resp:"Coord", label:"Postagens no Instagram do Will", meta:60, atingido:11 },
+      { who:"Gabriella", resp:"Coord | Heitor", label:"Postagens no Instagram do Alan", meta:40, atingido:2 },
+      { who:"Willian Trezzi", resp:"Gestor de Tráfego", label:"Leads MQL", meta:428, atingido:77 },
+      { who:"Rodrigo", resp:"Gestor de R.S", label:"Leads orgânicos", meta:600, atingido:73 },
+      { who:"Paula", resp:"Editora de vídeo", label:"Edição de vídeos", meta:66, atingido:10 },
+      { who:"Raphael", resp:"Fillmaker", label:"Edição de vídeos", meta:44, atingido:4 },
+      { who:"Alan", resp:"Especialista", label:"Anúncios", meta:28, atingido:20 },
+      { who:"Alan", resp:"Especialista", label:"Caixinha", meta:100, atingido:24 },
+      { who:"Alan", resp:"Especialista", label:"Reels", meta:28, atingido:0 },
+      { who:"Alan", resp:"Especialista", label:"Leads orgânicos", meta:150, atingido:0 },
+    ]},
+    { nome:"Comercial", lider:"Raul", metricas:[
+      { who:"Bruno", resp:"Vendedor", label:"Faturamento em vendas", meta:500000, atingido:72000, money:true },
+      { who:"Paulo", resp:"Vendedor", label:"Faturamento em vendas", meta:500000, atingido:6000, money:true },
+      { who:"Matheus", resp:"Vendedor", label:"Faturamento em vendas", meta:100000, atingido:8000, money:true },
+      { who:"Willian", resp:"Vendedor", label:"Faturamento em Be Master", meta:450000, atingido:0, money:true },
+      { who:"Raul", resp:"Vendedor", label:"Faturamento em Be Master", meta:450000, atingido:0, money:true },
+      { who:"Anderson", resp:"SDR", label:"Reunião realizada", meta:85, atingido:19 },
+      { who:"Milena", resp:"SDR", label:"Reunião realizada", meta:85, atingido:17 },
+      { who:"Gabriel e Kayke", resp:"Social Seller", label:"Reunião realizada", meta:110, atingido:10 },
+    ]},
+    { nome:"Diretores", lider:"", metricas:[
+      { who:"Willian", resp:"CEO", label:"Stories (caixinha)", meta:300, atingido:113 },
+      { who:"Willian", resp:"CEO", label:"Live", meta:20, atingido:5 },
+      { who:"Willian", resp:"CEO", label:"Aulas do Youtube", meta:8, atingido:2 },
+      { who:"Willian", resp:"CEO", label:"Call de venda", meta:40, atingido:6 },
+      { who:"Willian", resp:"CEO", label:"Gravação de anúncios", meta:40, atingido:0 },
+      { who:"Willian", resp:"CEO", label:"Case de marca", meta:4, atingido:0 },
+      { who:"Gabriella", resp:"COO", label:"Venda de Growth", meta:160000, atingido:0, money:true },
+      { who:"Gabriella", resp:"COO", label:"Convites p/ evento presencial", meta:100, atingido:0 },
+    ]},
+  ]
+};
+
+/* ============================================================
+   🧮 helpers
+   ============================================================ */
+const clamp = (v,min,max)=>Math.min(max,Math.max(min,v));
+const MESES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+
+const fmtMoney = v => {
+  if (v>=1000000) return "R$ "+(v/1000000).toLocaleString("pt-BR",{maximumFractionDigits:2})+" mi";
+  if (v>=1000)    return "R$ "+(v/1000).toLocaleString("pt-BR",{maximumFractionDigits:0})+" mil";
+  return "R$ "+v.toLocaleString("pt-BR",{maximumFractionDigits:0});
+};
+const fmtVal = (m,v)=> m.money ? fmtMoney(v) : v.toLocaleString("pt-BR");
+const fmtPct1 = v => v.toFixed(1).replace(".",",");
+
+/* aceita "R$ 450.000,00", "12,50%", "1,3", "428", "R$ 0,00"… */
+function parseNum(s){
+  if (s==null) return null;
+  s = String(s).trim();
+  if (!s || s.includes("#")) return null;
+  s = s.replace(/R\$\s*/g,"").replace(/%/g,"").trim();
+  if (!s) return null;
+  const lastDot = s.lastIndexOf("."), lastCom = s.lastIndexOf(",");
+  if (lastDot>-1 && lastCom>-1){
+    s = lastCom>lastDot ? s.replace(/\./g,"").replace(",",".") : s.replace(/,/g,"");
+  } else if (lastCom>-1){
+    s = (s.length-lastCom-1)<=2 ? s.replace(",",".") : s.replace(/,/g,"");
+  }
+  const v = parseFloat(s);
+  return isNaN(v) ? null : v;
+}
+
+function parseCSV(text){
+  const rows=[]; let row=[], cell="", q=false;
+  for (let i=0;i<text.length;i++){
+    const c=text[i];
+    if (q){
+      if (c==='"'){ if (text[i+1]==='"'){cell+='"';i++;} else q=false; }
+      else cell+=c;
+    }
+    else if (c==='"') q=true;
+    else if (c===','){ row.push(cell); cell=""; }
+    else if (c==='\n'){ row.push(cell); rows.push(row); row=[]; cell=""; }
+    else if (c!=='\r') cell+=c;
+  }
+  if (cell!=="" || row.length){ row.push(cell); rows.push(row); }
+  return rows;
+}
+
+/* ============================================================
+   📥 leitura da planilha (estrutura: Nome | Resp | Descrição | Meta mês | … | Atingido | % | dias…)
+   ============================================================ */
+function parseSheet(rows){
+  const header = rows[0]||[];
+  const dateCols = [];
+  header.forEach((h,i)=>{ if (/^\d{2}\/\d{2}\/\d{4}/.test((h||"").trim())) dateCols.push(i); });
+
+  const findCol = (re,fb)=>{ const i=header.findIndex(h=>re.test(h||"")); return i>-1?i:fb; };
+  const iDesc  = findCol(/descri/i,2);
+  const iMeta  = findCol(/meta\s*m[eê]s/i,3);
+  const iAting = findCol(/atingido/i,6);
+
+  const setores=[]; let cur=null;
+  for (let r=1;r<rows.length;r++){
+    const row = rows[r];
+    const nome = (row[0]||"").trim();
+    const desc = (row[iDesc]||"").trim();
+    if (SETOR_INFO[nome] && !desc){
+      cur = { nome, lider:(row[1]||"").trim() || SETOR_INFO[nome].lider, metricas:[] };
+      setores.push(cur);
+      continue;
+    }
+    if (!cur || !desc || !nome) continue;
+    const metaStr = (row[iMeta]||"").trim();
+    if (!metaStr || metaStr.includes("%")) continue;   // metas percentuais sem acompanhamento diário ficam fora
+    const meta = parseNum(metaStr);
+    if (meta==null || meta<=0) continue;
+    const atingido = parseNum(row[iAting]) ?? 0;
+    const daily = dateCols.map(c=>({ date:(header[c]||"").trim().slice(0,5), val:parseNum(row[c]) }));
+    cur.metricas.push({ who:nome, resp:(row[1]||"").trim(), label:desc, meta, atingido,
+                        money:/R\$/.test(metaStr), daily });
+  }
+
+  /* dia atual = última coluna de data com algum lançamento */
+  let diaAtual = 1;
+  for (let d=dateCols.length-1; d>=0; d--){
+    if (setores.some(s=>s.metricas.some(m=>m.daily[d].val!=null))){ diaAtual=d+1; break; }
+  }
+
+  /* nome do mês a partir do cabeçalho de datas */
+  let mes = "";
+  if (dateCols.length){
+    const [,m,y] = header[dateCols[0]].trim().split("/");
+    mes = (MESES[parseInt(m,10)-1]||"") + " " + (y||"").slice(0,4);
+  }
+
+  return { setores: setores.filter(s=>s.metricas.length), diaAtual, mes, diasNoMes: dateCols.length||30 };
+}
+
+/* ============================================================
+   🧠 estado + cálculo
+   ============================================================ */
+let SETORES=[], RANKING=[], pace=0, MES="", DIA=0, DIAS=30, LIVE=false;
+const stage = document.getElementById("stage");
+const dotsEl = document.getElementById("dots");
+let scenes=[], dots=[], idx=0, timer=null, paused=false;
+
+function computar(dados){
+  MES = dados.mes || FALLBACK.mes;
+  DIA = dados.diaAtual; DIAS = dados.diasNoMes;
+  pace = (DIA/DIAS)*100;
+  SETORES = dados.setores.map(s=>({ ...SETOR_INFO[s.nome], ...s, metricas:[...s.metricas] }));
+  /* seções separadas: junta as metas da pessoa (de um setor ou de todos) num time próprio */
+  (CONFIG.secaoSeparada||[]).forEach(r=>{
+    const minha = m => (!r.quem || r.quem.test(m.who))
+                    && (!r.cargo || r.cargo.test(m.resp||""))
+                    && (!r.meta || r.meta.test(m.label));
+    const movidas = [];
+    SETORES.forEach(s=>{
+      if (r.de && s.nome!==r.de) return;
+      if (s.nome===r.nome) return; // não rouba do próprio destino
+      const achadas = s.metricas.filter(minha);
+      if (achadas.length){
+        movidas.push(...achadas);
+        s.metricas = s.metricas.filter(m=>!minha(m));
+      }
+    });
+    if (!movidas.length) return;
+    const destino = SETORES.find(s=>s.nome===r.nome);
+    if (destino) destino.metricas.push(...movidas);
+    else SETORES.push({ nome:r.nome, lider:r.lider||"", cor:r.cor, tipo:r.tipo||"setor", metricas:movidas });
+  });
+  SETORES.forEach(s=>{
+    s.metricas = s.metricas.filter(m=>!CONFIG.notaSe.test(m.label)); // notas (NPS/PS) fora do placar
+    s.metricas = s.metricas.filter(m=>!CONFIG.foraDoPlacar.some(r=>r.setor===s.nome && r.quem.test(m.who)));
+    s.metricas.forEach(m=>{
+      m.pctMeta = m.meta>0 ? (m.atingido/m.meta)*100 : 0;          // % da meta do mês — a régua da arena
+    });
+    s.metricas.sort((a,b)=>b.pctMeta-a.pctMeta);
+    s.score = s.metricas.length
+      ? s.metricas.reduce((acc,m)=>acc+m.pctMeta,0)/s.metricas.length : 0;
+  });
+  SETORES = SETORES.filter(s=>s.metricas.length);
+  RANKING = [...SETORES].sort((a,b)=>b.score-a.score);
+  RANKING.forEach((s,i)=> s.rank = i+1);
+}
+
+/* ============================================================
+   🖥️ header
+   ============================================================ */
+function atualizarHeader(){
+  document.getElementById("monthPill").textContent = MES;
+  document.getElementById("paceDay").textContent = `Dia ${DIA} de ${DIAS}`;
+  document.getElementById("pacePct").textContent = pace.toFixed(0)+"%";
+  setTimeout(()=>{ document.getElementById("paceFill").style.width = pace+"%"; }, 120);
+}
+function setSync(ok,msg){
+  const b = document.getElementById("syncBadge");
+  b.classList.toggle("off",!ok);
+  b.querySelector("span").textContent = msg;
+}
+function tickClock(){
+  const n = new Date();
+  document.getElementById("clockTime").textContent =
+    n.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  document.getElementById("clockDate").textContent =
+    n.toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"});
+}
+tickClock(); setInterval(tickClock,10000);
+
+/* ============================================================
+   🎬 cenas
+   ============================================================ */
+function el(html){
+  const t = document.createElement("template");
+  t.innerHTML = html.trim();
+  return t.content.firstElementChild;
+}
+
+/* 🛡️ ícones dourados no estilo do brasão (no lugar de emoji estrutural) */
+const OURO="#c99a5b", PRATA="#c5c9d1", BRONZE="#b08054";
+const ICONS = {
+  trophy:`<svg class="ico" viewBox="0 0 24 24" fill="${OURO}"><path d="M7 2h10v2h4v3a5 5 0 0 1-5 5h-.4A6 6 0 0 1 13 15.7V18h3.5v2h-9v-2H11v-2.3A6 6 0 0 1 8.4 12H8a5 5 0 0 1-5-5V4h4V2zm12 4h-2v4a3 3 0 0 0 2-2.83V6zM5 6v1.17A3 3 0 0 0 7 10V6H5z"/></svg>`,
+  star:`<svg class="ico" viewBox="0 0 24 24" fill="${OURO}"><path d="M12 2l2.95 6.36 6.96.66-5.25 4.62 1.55 6.82L12 16.9l-6.21 3.56 1.55-6.82L2.09 9.02l6.96-.66L12 2z"/></svg>`,
+  crown:`<svg class="ico" viewBox="0 0 24 24" fill="${OURO}"><path d="M2.5 8l4.8 3.6L12 4.5l4.7 7.1L21.5 8 19.6 19H4.4L2.5 8z"/></svg>`,
+  medal(n){
+    const c=[OURO,PRATA,BRONZE][n-1]||OURO;
+    return `<svg class="ico medal" viewBox="0 0 24 24"><path d="M8 2h3l1 4-2.5 1L8 2zm8 0h-3l-1 4 2.5 1L16 2z" fill="${c}" opacity=".55"/><circle cx="12" cy="14" r="7.5" fill="${c}"/><text x="12" y="17.4" text-anchor="middle" font-family="Sora,Inter,sans-serif" font-size="9.5" font-weight="800" fill="#051f2c">${n}</text></svg>`;
+  }
+};
+const slug = w => w.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+
+function buildRanking(){
+  const rows = RANKING.map((s,i)=>{
+    const diff = s.score - pace;
+    const chip = diff >= 0
+      ? `<span class="chip up">▲ +${fmtPct1(diff)}pp à frente do ritmo</span>`
+      : s.score >= pace/2
+        ? `<span class="chip mid">faltam ${fmtPct1(-diff)}pp pro ritmo</span>`
+        : `<span class="chip down">faltam ${fmtPct1(-diff)}pp pro ritmo</span>`;
+    return `
+    <div class="row ${i===0?"first":""}${s.score>=100?" done":""}" style="transition-delay:${.15+i*.12}s">
+      <div class="rank">${i+1}º${i===0?`<span class="crown">${ICONS.crown}</span>`:""}</div>
+      <div class="team">
+        <span class="dot" style="background:${s.cor};color:${s.cor}"></span>
+        <div>
+          <div class="name">${s.nome}</div>
+          <div class="who"><span class="tbadge">${s.tipo==="individual"?"individual":"setor"}</span>${s.lider?`resp. ${s.lider} · `:""}${s.metricas.length} ${s.metricas.length===1?"meta":"metas"}</div>
+        </div>
+      </div>
+      <div class="bar-zone">
+        <div class="bar-track">
+          <div class="bar-fill" data-w="${clamp(s.score,0,100)}"
+               style="background:linear-gradient(90deg,${s.cor}cc,${s.cor});box-shadow:0 0 18px ${s.cor}66;transition-delay:${.3+i*.12}s"></div>
+        </div>
+        <div class="pace-mark" style="left:${pace}%"></div>
+      </div>
+      <div class="score"><span class="pct" data-count="${s.score}" data-dec="1">0</span><small>%</small></div>
+      <div class="delta">${chip}</div>
+    </div>`;
+  }).join("");
+
+  const scene = el(`
+  <section class="scene">
+    <div class="scene-title">
+      <h2>${ICONS.trophy} Classificação Geral</h2>
+      <span class="sub">% médio da meta do mês · risco = ritmo (dia ${DIA})</span>
+      <span class="tag">${MES}</span>
+    </div>
+    <div class="board">${rows}</div>
+  </section>`);
+  stage.appendChild(scene);
+  scenes.push({ el:scene, secs:CONFIG.segundosRanking });
+}
+
+function buildSector(s){
+  const r = 46, C = 2*Math.PI*r;
+  const visMetrics = s.metricas.slice(0,8);
+  const corPct = m => m.pctMeta>=100 ? "#e8c98f" : m.pctMeta>=pace ? s.cor : m.pctMeta>=pace/2 ? "#d8c7b2" : "#f87171";
+  const metrics = visMetrics.map((m,i)=>`
+    <div class="metric${m.pctMeta>=100?" done":""}" style="transition-delay:${.15+i*.07}s">
+      <div class="info">
+        <div class="label">${m.label}</div>
+        <div class="who">${m.who}${m.resp?` — ${m.resp}`:""}</div>
+      </div>
+      <div class="bar-zone">
+        <div class="bar-track">
+          <div class="bar-fill" data-w="${clamp(m.pctMeta,0,100)}"
+               style="background:linear-gradient(90deg,${s.cor}cc,${s.cor});box-shadow:0 0 14px ${s.cor}55;transition-delay:${.25+i*.07}s"></div>
+        </div>
+        <div class="pace-mark" style="left:${pace}%"></div>
+      </div>
+      <div class="nums">
+        <div class="val">${fmtVal(m,m.atingido)}</div>
+        <div class="goal">meta ${fmtVal(m,m.meta)}</div>
+      </div>
+      <div class="mpct" style="color:${corPct(m)}">${m.pctMeta.toFixed(0)}%</div>
+    </div>`).join("");
+
+  const medal = s.rank<=3 ? ICONS.medal(s.rank) : s.rank+"º";
+  const scene = el(`
+  <section class="scene">
+    <div class="scene-title">
+      <h2 style="color:${s.cor}">${s.nome}</h2>
+      <span class="sub">${s.lider?`resp. ${s.lider}`:""}</span>
+      <span class="tag">${s.rank}º lugar na arena</span>
+    </div>
+    <div class="sector-grid">
+      <div class="sector-side">
+        <div class="glow" style="background:${s.cor}"></div>
+        <div class="ring-wrap">
+          <svg viewBox="0 0 100 100">
+            <circle class="ring-bg" cx="50" cy="50" r="${r}"></circle>
+            <circle class="ring-fg" cx="50" cy="50" r="${r}" stroke="${s.cor}"
+              stroke-dasharray="${C}" stroke-dashoffset="${C}" data-c="${C}"
+              data-p="${clamp(s.score,0,100)}" style="filter:drop-shadow(0 0 6px ${s.cor})"></circle>
+          </svg>
+          <div class="ring-center">
+            <div class="big"><span data-count="${s.score}" data-dec="1">0</span><small>%</small></div>
+            <div class="lbl">da meta do mês</div>
+          </div>
+        </div>
+        <div class="sector-name">${medal} ${s.nome}</div>
+        <div class="sector-owner">ritmo do calendário: ${pace.toFixed(0)}% · ${s.score>=pace?"no ritmo ✅":"abaixo do ritmo — bora virar 🔥"}</div>
+        <div class="rank-chip" style="color:${s.cor}">${s.rank}º LUGAR</div>
+      </div>
+      <div class="metrics" style="grid-template-rows:repeat(${visMetrics.length},1fr)">${metrics}</div>
+    </div>
+  </section>`);
+  stage.appendChild(scene);
+  scenes.push({ el:scene, secs:CONFIG.segundosPorCena });
+}
+
+function buildHall(){
+  const all = SETORES.flatMap(s=> s.metricas.map(m=>({...m, setor:s.nome, cor:s.cor})));
+  /* pódio: a melhor meta de cada pessoa — 1 vaga por pessoa */
+  const visto = new Set(), porPessoa = [];
+  [...all].sort((a,b)=>b.pctMeta-a.pctMeta).forEach(m=>{
+    const k = m.who.toLowerCase();
+    if (!visto.has(k)){ visto.add(k); porPessoa.push(m); }
+  });
+  const top3 = porPessoa.slice(0,3);
+  const cls = ["gold","silver","bronze"];
+  const iniciais = w => {
+    const p = w.split(/\s+/).filter(x=>x.length>2);
+    return (p.length>=2 ? p[0][0]+p[p.length-1][0] : w.slice(0,2)).toUpperCase();
+  };
+  const pods = top3.map((m,i)=>`
+    <div class="pod ${cls[i]}" style="transition-delay:${.15+i*.12}s">
+      <div class="avwrap">
+        <div class="avatar" style="background:${m.cor};box-shadow:0 0 26px -2px ${m.cor}">${iniciais(m.who)}<img src="assets/fotos/${slug(m.who)}.jpg" alt="" onerror="this.remove()"></div>
+        <div class="medal2">${ICONS.medal(i+1)}</div>
+      </div>
+      <div class="pwho">${m.who}</div>
+      <div class="pwhat">${m.label} — ${fmtVal(m,m.atingido)} de ${fmtVal(m,m.meta)}</div>
+      <div class="ppct" style="color:${m.cor}"><span data-count="${m.pctMeta}" data-dec="0">0</span>%</div>
+      <div class="plbl">da meta do mês</div>
+      <div class="psector" style="color:${m.cor}">${m.setor}</div>
+    </div>`).join("");
+
+  /* 🏅 prêmios especiais — calculados dos lançamentos diários da planilha */
+  const limpar = l => l.toLowerCase().replace(/^quantidade de /,"");
+  const awards = [];
+
+  let cheque = null; // maior valor em dinheiro num único dia
+  all.filter(m=>m.money&&m.daily).forEach(m=>m.daily.forEach(d=>{
+    if (d.val>0 && (!cheque || d.val>cheque.val)) cheque = {...m, val:d.val, date:d.date};
+  }));
+  if (cheque) awards.push({icon:"💰",title:"Maior cheque",who:cheque.who,
+    val:fmtMoney(cheque.val),det:`em um único dia · ${cheque.date}`,cor:cheque.cor});
+
+  let rec = null; // maior volume num único dia
+  all.filter(m=>!m.money&&m.daily).forEach(m=>m.daily.forEach(d=>{
+    if (d.val>0 && (!rec || d.val>rec.val)) rec = {...m, val:d.val, date:d.date};
+  }));
+  if (rec) awards.push({icon:"⚡",title:"Recorde em 1 dia",who:rec.who,
+    val:rec.val.toLocaleString("pt-BR"),det:`${limpar(rec.label)} · ${rec.date}`,cor:rec.cor});
+
+  let seq = null; // mais dias seguidos produzindo (zero explícito quebra a sequência)
+  all.forEach(m=>{
+    if (!m.daily) return;
+    let run=0, mx=0;
+    m.daily.forEach(d=>{ if (d.val>0){ run++; mx=Math.max(mx,run); } else if (d.val===0){ run=0; } });
+    if (mx>=2 && (!seq || mx>seq.dias)) seq = {...m, dias:mx};
+  });
+  if (seq) awards.push({icon:"🔥",title:"Sequência de fogo",who:seq.who,
+    val:`${seq.dias} dias`,det:`${limpar(seq.label)} sem falhar`,cor:seq.cor});
+
+  let duelo = null; // mesma meta, mesmo setor, menor distância relativa entre os 2 primeiros
+  const grupos = {};
+  all.forEach(m=>{ const k=m.setor+"|"+m.label.toLowerCase(); (grupos[k]=grupos[k]||[]).push(m); });
+  Object.values(grupos).filter(g=>g.length>=2).forEach(g=>{
+    const [a,b] = [...g].sort((x,y)=>y.atingido-x.atingido);
+    if (a.atingido>0 && b.atingido>0){
+      const gap = (a.atingido-b.atingido)/a.atingido;
+      if (!duelo || gap<duelo.gap) duelo = {a,b,gap};
+    }
+  });
+  if (duelo) awards.push({icon:"🥊",title:"Duelo mais quente",who:`${duelo.a.who} × ${duelo.b.who}`,
+    val:`${fmtVal(duelo.a,duelo.a.atingido)} × ${fmtVal(duelo.b,duelo.b.atingido)}`,det:limpar(duelo.a.label),cor:duelo.a.cor});
+
+  const awardsHtml = awards.slice(0,4).map((a,i)=>`
+    <div class="award" style="transition-delay:${.5+i*.1}s">
+      <div class="aicon">${a.icon}</div>
+      <div class="atitle">${a.title}</div>
+      <div class="awho">${a.who}</div>
+      <div class="aval" style="color:${a.cor}">${a.val}</div>
+      <div class="adet">${a.det}</div>
+    </div>`).join("");
+
+  const scene = el(`
+  <section class="scene">
+    <div class="scene-title">
+      <h2>${ICONS.star} Hall da Fama</h2>
+      <span class="sub">pódio do mês — 1 vaga por pessoa · prêmios direto dos lançamentos diários</span>
+      <span class="tag">MVP ${MES}</span>
+    </div>
+    <div class="hall">
+      <div class="podium">${pods}</div>
+      <div class="awards">${awardsHtml}</div>
+    </div>
+  </section>`);
+  stage.appendChild(scene);
+  scenes.push({ el:scene, secs:CONFIG.segundosPorCena+3 });
+}
+
+/* ============================================================
+   🎟️ ticker — destaques calculados dos dados
+   ============================================================ */
+function buildTicker(){
+  const all = SETORES.flatMap(s=> s.metricas.map(m=>({...m, setor:s.nome})));
+  const lead = RANKING[0];
+  const items = [
+    `🏆 <b>${lead.nome}</b> lidera a arena com <b>${fmtPct1(lead.score)}%</b> da meta do mês`,
+    `📅 Dia <b>${DIA} de ${DIAS}</b> — ritmo do calendário: <b>${pace.toFixed(0)}%</b>`,
+    ...RANKING.slice(1).map(s=>`${s.rank}º <b>${s.nome}</b> — ${fmtPct1(s.score)}%`),
+  ];
+
+  /* melhor dia em dinheiro */
+  let bM=null;
+  all.filter(m=>m.money&&m.daily).forEach(m=>m.daily.forEach(d=>{
+    if (d.val>0 && (!bM || d.val>bM.val)) bM={who:m.who,val:d.val,date:d.date};
+  }));
+  if (bM) items.push(`🔥 <b>${bM.who}</b> cravou <b>${fmtMoney(bM.val)}</b> em um único dia (${bM.date})`);
+
+  /* melhor dia em volume */
+  let bC=null;
+  all.filter(m=>!m.money&&m.daily).forEach(m=>m.daily.forEach(d=>{
+    if (d.val>0 && (!bC || d.val>bC.val)) bC={who:m.who,label:m.label,val:d.val,date:d.date};
+  }));
+  if (bC) items.push(`⚡ <b>${bC.who}</b>: <b>${bC.val} ${bC.label.toLowerCase().replace(/^quantidade de /,"")}</b> em ${bC.date}`);
+
+  /* duelo de SDRs */
+  const sdrs = all.filter(m=>/sdr/i.test(m.resp||""));
+  if (sdrs.length>=2){
+    const [a,b]=[...sdrs].sort((x,y)=>y.atingido-x.atingido);
+    items.push(`🥊 Batalha dos SDRs: <b>${a.who} ${a.atingido}</b> × <b>${b.atingido} ${b.who}</b>`);
+  }
+
+  /* faturamento + melhor % individual */
+  const fat = all.filter(m=>m.money).reduce((a,m)=>a+m.atingido,0);
+  if (fat>0) items.push(`💰 Faturamento do mês: <b>${fmtMoney(fat)}</b>`);
+  const top = [...all].sort((a,b)=>b.pctMeta-a.pctMeta)[0];
+  if (top && top.pctMeta>0) items.push(`🎯 <b>${top.who}</b> já entregou <b>${top.pctMeta.toFixed(0)}%</b> da meta de "${top.label}"`);
+
+  /* 📈 movimento do dia — score de hoje vs score sem os lançamentos de hoje */
+  const movimento = SETORES.map(s=>{
+    const pcts = s.metricas.map(m=>{
+      const hoje = m.daily?.[DIA-1]?.val || 0;
+      return m.meta>0 ? Math.max(0,m.atingido-hoje)/m.meta*100 : 0;
+    });
+    const ontem = pcts.length ? pcts.reduce((a,b)=>a+b,0)/pcts.length : 0;
+    return { nome:s.nome, rank:s.rank, ontem, delta:s.score-ontem };
+  });
+  const mover = [...movimento].sort((a,b)=>b.delta-a.delta)[0];
+  if (mover && mover.delta>0.05)
+    items.push(`📈 Movimento do dia: <b>${mover.nome}</b> avançou <b>+${fmtPct1(mover.delta)}pp</b> hoje`);
+  const rankOntem = [...movimento].sort((a,b)=>b.ontem-a.ontem).map(x=>x.nome);
+  movimento.forEach(s=>{
+    const antes = rankOntem.indexOf(s.nome)+1;
+    if (antes>s.rank) items.push(`🚀 <b>${s.nome}</b> subiu do ${antes}º pro ${s.rank}º lugar hoje`);
+  });
+
+  /* 🏅 metas batidas — celebração */
+  all.filter(m=>m.pctMeta>=100).slice(0,3).forEach(m=>
+    items.push(`🏅 <b>${m.who}</b> BATEU a meta de "${m.label}" — <b>${m.pctMeta.toFixed(0)}%</b>!`));
+
+  const html = items.map(t=>`<span class="titem">${t}<span style="color:#7d5527">◆</span></span>`).join("");
+  document.getElementById("tickerInner").innerHTML = html + html; /* duplica p/ loop infinito */
+}
+
+/* ============================================================
+   🔢 count-up + play/reset de cena
+   ============================================================ */
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function countUp(span){
+  const target = parseFloat(span.dataset.count);
+  const dec = parseInt(span.dataset.dec||"0");
+  if (reduceMotion){ span.textContent = target.toFixed(dec).replace(".",","); return; }
+  clearInterval(span._timer);
+  const dur = 1400, t0 = performance.now();
+  span._timer = setInterval(()=>{
+    const k = clamp((performance.now()-t0)/dur,0,1);
+    const e = 1-Math.pow(1-k,4);
+    span.textContent = (target*e).toFixed(dec).replace(".",",");
+    if (k>=1) clearInterval(span._timer);
+  },30);
+}
+
+function playScene(sc){
+  sc.el.classList.add("active");
+  setTimeout(()=>{
+    sc.el.classList.add("run");
+    sc.el.querySelectorAll(".bar-fill").forEach(b=> b.style.transform = `scaleX(${b.dataset.w/100})`);
+    sc.el.querySelectorAll(".ring-fg").forEach(r=>{
+      r.style.strokeDashoffset = r.dataset.c * (1 - r.dataset.p/100);
+    });
+    sc.el.querySelectorAll("[data-count]").forEach(countUp);
+  }, 80);
+}
+function resetScene(sc){
+  sc.el.classList.remove("active","run");
+  sc.el.querySelectorAll("[data-count]").forEach(s=> clearInterval(s._timer));
+  sc.el.querySelectorAll(".bar-fill").forEach(b=> b.style.transform = "scaleX(0)");
+  sc.el.querySelectorAll(".ring-fg").forEach(r=> r.style.strokeDashoffset = r.dataset.c);
+  sc.el.querySelectorAll("[data-count]").forEach(s=> s.textContent="0");
+}
+
+/* ============================================================
+   ⏯️ scheduler — auto-rotate / ← → / espaço pausa / F fullscreen / R recarrega
+   ============================================================ */
+function show(i){
+  if (!scenes.length) return;
+  scenes.forEach((sc,j)=>{ if(j!==i) resetScene(sc); });
+  idx = (i+scenes.length)%scenes.length;
+  const sc = scenes[idx];
+  playScene(sc);
+  dots.forEach((d,j)=>{
+    d.classList.toggle("on", j===idx);
+    if (j===idx){ d.style.setProperty("--scene-secs", sc.secs+"s");
+      d.style.animation="none"; void d.offsetWidth; d.style.animation=""; }
+  });
+  clearTimeout(timer);
+  if (!paused) timer = setTimeout(()=>show(idx+1), sc.secs*1000);
+}
+
+function montar(dados){
+  computar(dados);
+  atualizarHeader();
+  const manterIdx = scenes.length ? Math.min(idx, 0) : 0; /* recomeça do ranking ao atualizar */
+  clearTimeout(timer);
+  scenes.forEach(resetScene);
+  stage.innerHTML=""; dotsEl.innerHTML=""; scenes=[];
+  buildRanking();
+  RANKING.forEach(buildSector);
+  buildHall();
+  buildTicker();
+  scenes.forEach((_,i)=>{
+    const d = el(`<div class="dot-nav"></div>`);
+    d.onclick = ()=>show(i);
+    dotsEl.appendChild(d);
+  });
+  dots = [...dotsEl.children];
+  show(manterIdx);
+}
+
+/* roda do mouse / trackpad muda de cena (1 gesto = 1 cena) */
+let wheelLock = 0;
+document.addEventListener("wheel",e=>{
+  const d = Math.abs(e.deltaY)>=Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+  const now = Date.now();
+  if (Math.abs(d)<20 || now-wheelLock<500) return;
+  wheelLock = now;
+  show(idx + (d>0 ? 1 : -1));
+},{passive:true});
+
+document.addEventListener("keydown",e=>{
+  if (e.key==="ArrowRight") show(idx+1);
+  if (e.key==="ArrowLeft")  show(idx-1);
+  if (e.key===" "){ e.preventDefault();
+    paused = !paused;
+    document.body.classList.toggle("paused",paused);
+    if (paused) clearTimeout(timer); else show(idx);
+  }
+  if (e.key==="f" || e.key==="F"){
+    document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  }
+  if (e.key==="r" || e.key==="R") carregar();
+});
+
+/* ============================================================
+   🔄 conexão com a planilha
+   ============================================================ */
+let ultimaSig = "";
+
+async function carregar(){
+  try{
+    const url = `https://docs.google.com/spreadsheets/d/${CONFIG.planilhaId}/export?format=csv`
+              + (CONFIG.aba?`&gid=${CONFIG.aba}`:"") + `&cb=${Date.now()}`;
+    const res = await fetch(url,{cache:"no-store"});
+    if (!res.ok) throw new Error("HTTP "+res.status);
+    const dados = parseSheet(parseCSV(await res.text()));
+    if (!dados.setores.length) throw new Error("estrutura da planilha não reconhecida");
+    LIVE = true;
+    const hora = new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+    const sig = JSON.stringify(dados.setores)+dados.diaAtual;
+    if (sig === ultimaSig){ setSync(true,`planilha · ${hora}`); return; }
+    ultimaSig = sig;
+    montar(dados);
+    setSync(true,`planilha · ${hora}`);
+  }catch(err){
+    console.warn("Sem conexão com a planilha — usando dados locais.",err);
+    if (!scenes.length) montar(FALLBACK);
+    setSync(false, LIVE ? "offline — últimos dados" : "dados locais");
+  }
+}
+
+carregar();
+setInterval(carregar, CONFIG.atualizarMin*60*1000);
+</script>
+</body>
+</html>

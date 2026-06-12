@@ -1,0 +1,10 @@
+Fotos do pódio (Hall da Fama)
+=============================
+Coloque aqui fotos quadradas (ex.: 400x400) em .jpg, nomeadas pelo nome
+como aparece na planilha, minúsculo, sem acento, espaços viram hífen:
+  alan.jpg
+  willian.jpg
+  willian-trezzi.jpg
+  anderson.jpg
+  gabriel-e-kayke.jpg
+Sem foto, o dashboard mostra as iniciais (fallback automático).
