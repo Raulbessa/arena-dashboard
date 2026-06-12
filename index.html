@@ -795,30 +795,25 @@ function buildSector(s){
 
 function buildHall(){
   const all = SETORES.flatMap(s=> s.metricas.map(m=>({...m, setor:s.nome, cor:s.cor})));
-  /* pódio: a melhor meta de cada pessoa — 1 vaga por pessoa */
-  const visto = new Set(), porPessoa = [];
-  [...all].sort((a,b)=>b.pctMeta-a.pctMeta).forEach(m=>{
-    const k = m.who.toLowerCase();
-    if (!visto.has(k)){ visto.add(k); porPessoa.push(m); }
-  });
-  const top3 = porPessoa.slice(0,3);
+  /* pódio: os 3 primeiros da classificação geral da arena */
+  const top3 = RANKING.slice(0,3);
   const cls = ["gold","silver","bronze"];
   const iniciais = w => {
     const p = w.split(/\s+/).filter(x=>x.length>2);
     return (p.length>=2 ? p[0][0]+p[p.length-1][0] : w.slice(0,2)).toUpperCase();
   };
-  const pods = top3.map((m,i)=>`
+  const pods = top3.map((s,i)=>`
     <div class="pod ${cls[i]}" style="transition-delay:${.15+i*.12}s">
       ${i===0?`<div class="pcrown">${ICONS.crown}</div>`:""}
       <div class="avwrap">
-        <div class="avatar" style="background:${m.cor};box-shadow:0 0 26px -2px ${m.cor}">${iniciais(m.who)}<img src="assets/fotos/${slug(m.who)}.jpg" alt="" onerror="this.remove()"></div>
+        <div class="avatar" style="background:${s.cor};box-shadow:0 0 26px -2px ${s.cor}">${iniciais(s.nome)}<img src="assets/fotos/${slug(s.nome)}.jpg" alt="" onerror="this.remove()"></div>
         <div class="medal2">${ICONS.medal(i+1)}</div>
       </div>
-      <div class="pwho">${m.who}</div>
-      <div class="pwhat">${m.label} — ${fmtVal(m,m.atingido)} de ${fmtVal(m,m.meta)}</div>
-      <div class="ppct" style="color:${m.cor}"><span data-count="${m.pctMeta}" data-dec="0">0</span>%</div>
+      <div class="pwho">${s.nome}</div>
+      <div class="pwhat">${s.lider?`resp. ${s.lider} · `:""}${s.metricas.length} ${s.metricas.length===1?"meta":"metas"}</div>
+      <div class="ppct" style="color:${s.cor}"><span data-count="${s.score}" data-dec="1">0</span>%</div>
       <div class="plbl">da meta do mês</div>
-      <div class="psector" style="color:${m.cor}">${m.setor}</div>
+      <div class="psector" style="color:${s.cor}">${s.deltaHoje>0.05?`hoje +${fmtPct1(s.deltaHoje)}pp`:(s.tipo==="individual"?"individual":"setor")}</div>
       <div class="pedestal">${i+1}º</div>
     </div>`).join("");
 
@@ -876,8 +871,8 @@ function buildHall(){
   <section class="scene">
     <div class="scene-title">
       <h2>${ICONS.star} Hall da Fama</h2>
-      <span class="sub">pódio do mês — 1 vaga por pessoa · prêmios direto dos lançamentos diários</span>
-      <span class="tag">MVP ${MES}</span>
+      <span class="sub">o pódio da arena — 1º, 2º e 3º da classificação geral · prêmios direto dos lançamentos diários</span>
+      <span class="tag">Pódio ${MES}</span>
     </div>
     <div class="hall">
       <div class="podium">${pods}</div>
