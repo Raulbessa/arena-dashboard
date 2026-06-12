@@ -219,34 +219,58 @@
 
   /* ===== cena: hall da fama ===== */
   .hall{flex:1;display:flex;flex-direction:column;gap:2vh;min-height:0}
-  .podium{flex:1.4;display:flex;gap:1.8vw;align-items:stretch;min-height:0}
+  .podium{flex:1.5;display:flex;gap:2.2vw;align-items:flex-end;justify-content:center;min-height:0;padding:0 5vw}
   .pod{
-    flex:1;border-radius:2vh;border:1px solid var(--panel-border);background:var(--panel);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;
-    position:relative;overflow:hidden;padding:2vh;
+    flex:1;max-width:23vw;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:.7vh;
+    position:relative;
     opacity:0;transform:translateY(3vh);
     transition:opacity .6s var(--ease-out-expo),transform .6s var(--ease-out-expo);
   }
   .scene.run .pod{opacity:1;transform:translateY(0)}
-  .pod .medal{font-size:5vh}
-  .pod .pwho{font-family:var(--display);font-size:3vh;font-weight:800}
-  .pod .pwhat{font-size:1.7vh;color:var(--muted);text-align:center;max-width:80%}
-  .pod .ppct{font-family:var(--display);font-size:5vh;font-weight:800;font-variant-numeric:tabular-nums}
-  .pod .plbl{font-size:1.3vh;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-top:-.6vh}
-  .pod .psector{font-size:1.4vh;letter-spacing:.18em;text-transform:uppercase;font-weight:700;
-    padding:.5vh 1.2vw;border-radius:99px;border:1px solid currentColor}
-  .pod.gold{order:2;flex:1.25;border-color:rgba(201,154,91,.5);
-    background:linear-gradient(180deg,rgba(165,117,61,.14),rgba(255,255,255,.03));
-    box-shadow:0 0 50px rgba(201,154,91,.12)}
-  .pod.gold::before{content:"";position:absolute;inset:0;
-    background:linear-gradient(105deg,transparent 30%,rgba(216,199,178,.14) 50%,transparent 70%);
-    transform:translateX(-100%);animation:sheen 4.5s ease-in-out infinite}
+  .pod .pcrown{font-size:3.2vh;line-height:1;animation:bob 2.6s ease-in-out infinite}
+  .pod .pwho{font-family:var(--brand);font-size:2.8vh;font-weight:700}
+  .pod.gold .pwho{font-size:3.4vh;color:var(--gold)}
+  .pod .pwhat{font-size:1.6vh;color:var(--muted);text-align:center;max-width:92%}
+  .pod .ppct{font-family:var(--display);font-size:4.6vh;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  .pod.gold .ppct{font-size:5.6vh}
+  .pod .plbl{font-size:1.2vh;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+  .pod .psector{font-size:1.3vh;letter-spacing:.18em;text-transform:uppercase;font-weight:700;
+    padding:.4vh 1.1vw;border-radius:99px;border:1px solid currentColor;margin-bottom:1vh}
+  .pod.gold{order:2}
   .pod.silver{order:1}
   .pod.bronze{order:3}
+  .pod .pedestal{
+    width:100%;border-radius:1.6vh 1.6vh 0 0;flex:none;
+    display:flex;align-items:flex-start;justify-content:center;padding-top:1.2vh;
+    font-family:var(--brand);font-weight:800;font-size:4vh;color:rgba(251,244,230,.9);
+    border:1px solid var(--panel-border);border-bottom:none;
+    transform:scaleY(0);transform-origin:bottom;
+    transition:transform .9s var(--ease-out-expo) .35s;
+  }
+  .scene.run .pod .pedestal{transform:scaleY(1)}
+  .pod.gold .pedestal{height:14vh;border-color:rgba(201,154,91,.65);
+    background:linear-gradient(180deg,rgba(201,154,91,.32),rgba(201,154,91,.04));
+    box-shadow:0 0 50px rgba(201,154,91,.18)}
+  .pod.silver .pedestal{height:9.5vh;border-color:rgba(197,201,209,.4);
+    background:linear-gradient(180deg,rgba(197,201,209,.18),rgba(197,201,209,.03))}
+  .pod.bronze .pedestal{height:7vh;border-color:rgba(176,128,84,.45);
+    background:linear-gradient(180deg,rgba(176,128,84,.20),rgba(176,128,84,.03))}
   .pod .avwrap{position:relative;margin-bottom:.4vh}
-  .pod .avatar{width:8vh;height:8vh;border-radius:50%;display:grid;place-items:center;
-    font-family:var(--display);font-weight:800;font-size:2.8vh;color:#051f2c}
-  .pod .medal2{position:absolute;bottom:-1vh;right:-1.4vh;font-size:3.2vh;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5))}
+  .pod.gold .avwrap{animation:float 3.4s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-.7vh)}}
+  .pod.gold .avwrap::before{
+    content:"";position:absolute;inset:-4.5vh;border-radius:50%;
+    background:repeating-conic-gradient(rgba(201,154,91,.20) 0 7deg,transparent 7deg 20deg);
+    -webkit-mask-image:radial-gradient(circle,#000 25%,transparent 70%);
+    mask-image:radial-gradient(circle,#000 25%,transparent 70%);
+    animation:spin 16s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .pod .avatar{width:8.5vh;height:8.5vh;border-radius:50%;display:grid;place-items:center;
+    font-family:var(--display);font-weight:800;font-size:2.9vh;color:#051f2c}
+  .pod.gold .avatar{width:11vh;height:11vh;font-size:3.7vh}
+  .pod .medal2{position:absolute;bottom:-1vh;right:-1.4vh;font-size:3.2vh;filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));z-index:1}
   .awards{flex:.9;display:flex;gap:1.8vw}
   .award{flex:1;border-radius:2vh;border:1px solid var(--panel-border);background:var(--panel);
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4vh;padding:1.4vh;text-align:center;
@@ -313,6 +337,11 @@
   /* ===== refinamentos (design review) ===== */
   .ico{height:1em;width:auto;display:inline-block;vertical-align:-.12em}
   .chip.mid{color:#d8c7b2;background:rgba(216,199,178,.10)}
+  .mv{font-size:1.3vh;font-weight:800;margin-top:.2vh;color:var(--muted)}
+  .mv.up{color:#4ade80}
+  .mv.down{color:#f87171}
+  .score .today{font-size:1.35vh;font-weight:600;color:var(--muted);margin-top:.4vh}
+  .score .today.up{color:var(--gold)}
   .tbadge{
     display:inline-block;font-size:1.1vh;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
     border:1px solid var(--panel-border);border-radius:99px;padding:.15vh .5vw;
@@ -601,6 +630,16 @@ function computar(dados){
   SETORES = SETORES.filter(s=>s.metricas.length);
   RANKING = [...SETORES].sort((a,b)=>b.score-a.score);
   RANKING.forEach((s,i)=> s.rank = i+1);
+  /* movimento do dia: score sem os lançamentos de hoje → delta de pp e posição de ontem */
+  SETORES.forEach(s=>{
+    const pcts = s.metricas.map(m=>{
+      const hoje = m.daily?.[DIA-1]?.val || 0;
+      return m.meta>0 ? Math.max(0,m.atingido-hoje)/m.meta*100 : 0;
+    });
+    s.scoreOntem = pcts.length ? pcts.reduce((a,b)=>a+b,0)/pcts.length : 0;
+    s.deltaHoje = s.score - s.scoreOntem;
+  });
+  [...SETORES].sort((a,b)=>b.scoreOntem-a.scoreOntem).forEach((s,i)=> s.rankOntem = i+1);
 }
 
 /* ============================================================
@@ -656,9 +695,11 @@ function buildRanking(){
       : s.score >= pace/2
         ? `<span class="chip mid">faltam ${fmtPct1(-diff)}pp pro ritmo</span>`
         : `<span class="chip down">faltam ${fmtPct1(-diff)}pp pro ritmo</span>`;
+    const mv = (s.rankOntem||s.rank) - s.rank;
+    const mvHtml = mv>0 ? `<div class="mv up">▲${mv}</div>` : mv<0 ? `<div class="mv down">▼${-mv}</div>` : `<div class="mv">—</div>`;
     return `
     <div class="row ${i===0?"first":""}${s.score>=100?" done":""}" style="transition-delay:${.15+i*.12}s">
-      <div class="rank">${i+1}º${i===0?`<span class="crown">${ICONS.crown}</span>`:""}</div>
+      <div class="rank">${i+1}º${i===0?`<span class="crown">${ICONS.crown}</span>`:""}${mvHtml}</div>
       <div class="team">
         <span class="dot" style="background:${s.cor};color:${s.cor}"></span>
         <div>
@@ -673,7 +714,10 @@ function buildRanking(){
         </div>
         <div class="pace-mark" style="left:${pace}%"></div>
       </div>
-      <div class="score"><span class="pct" data-count="${s.score}" data-dec="1">0</span><small>%</small></div>
+      <div class="score">
+        <span class="pct" data-count="${s.score}" data-dec="1">0</span><small>%</small>
+        <div class="today${s.deltaHoje>0.05?" up":""}">${s.deltaHoje>0.05?`hoje +${fmtPct1(s.deltaHoje)}pp`:"hoje —"}</div>
+      </div>
       <div class="delta">${chip}</div>
     </div>`;
   }).join("");
@@ -765,6 +809,7 @@ function buildHall(){
   };
   const pods = top3.map((m,i)=>`
     <div class="pod ${cls[i]}" style="transition-delay:${.15+i*.12}s">
+      ${i===0?`<div class="pcrown">${ICONS.crown}</div>`:""}
       <div class="avwrap">
         <div class="avatar" style="background:${m.cor};box-shadow:0 0 26px -2px ${m.cor}">${iniciais(m.who)}<img src="assets/fotos/${slug(m.who)}.jpg" alt="" onerror="this.remove()"></div>
         <div class="medal2">${ICONS.medal(i+1)}</div>
@@ -774,6 +819,7 @@ function buildHall(){
       <div class="ppct" style="color:${m.cor}"><span data-count="${m.pctMeta}" data-dec="0">0</span>%</div>
       <div class="plbl">da meta do mês</div>
       <div class="psector" style="color:${m.cor}">${m.setor}</div>
+      <div class="pedestal">${i+1}º</div>
     </div>`).join("");
 
   /* 🏅 prêmios especiais — calculados dos lançamentos diários da planilha */
@@ -881,22 +927,12 @@ function buildTicker(){
   const top = [...all].sort((a,b)=>b.pctMeta-a.pctMeta)[0];
   if (top && top.pctMeta>0) items.push(`🎯 <b>${top.who}</b> já entregou <b>${top.pctMeta.toFixed(0)}%</b> da meta de "${top.label}"`);
 
-  /* 📈 movimento do dia — score de hoje vs score sem os lançamentos de hoje */
-  const movimento = SETORES.map(s=>{
-    const pcts = s.metricas.map(m=>{
-      const hoje = m.daily?.[DIA-1]?.val || 0;
-      return m.meta>0 ? Math.max(0,m.atingido-hoje)/m.meta*100 : 0;
-    });
-    const ontem = pcts.length ? pcts.reduce((a,b)=>a+b,0)/pcts.length : 0;
-    return { nome:s.nome, rank:s.rank, ontem, delta:s.score-ontem };
-  });
-  const mover = [...movimento].sort((a,b)=>b.delta-a.delta)[0];
-  if (mover && mover.delta>0.05)
-    items.push(`📈 Movimento do dia: <b>${mover.nome}</b> avançou <b>+${fmtPct1(mover.delta)}pp</b> hoje`);
-  const rankOntem = [...movimento].sort((a,b)=>b.ontem-a.ontem).map(x=>x.nome);
-  movimento.forEach(s=>{
-    const antes = rankOntem.indexOf(s.nome)+1;
-    if (antes>s.rank) items.push(`🚀 <b>${s.nome}</b> subiu do ${antes}º pro ${s.rank}º lugar hoje`);
+  /* 📈 movimento do dia — usa o delta/posição de ontem calculados em computar() */
+  const mover = [...SETORES].sort((a,b)=>b.deltaHoje-a.deltaHoje)[0];
+  if (mover && mover.deltaHoje>0.05)
+    items.push(`📈 Movimento do dia: <b>${mover.nome}</b> avançou <b>+${fmtPct1(mover.deltaHoje)}pp</b> hoje`);
+  SETORES.forEach(s=>{
+    if (s.rankOntem>s.rank) items.push(`🚀 <b>${s.nome}</b> subiu do ${s.rankOntem}º pro ${s.rank}º lugar hoje`);
   });
 
   /* 🏅 metas batidas — celebração */
@@ -1010,9 +1046,10 @@ document.addEventListener("keydown",e=>{
 /* ============================================================
    🔄 conexão com a planilha
    ============================================================ */
-let ultimaSig = "";
+let ultimaSig = "", ultimaBusca = 0;
 
 async function carregar(){
+  ultimaBusca = Date.now();
   try{
     const url = `https://docs.google.com/spreadsheets/d/${CONFIG.planilhaId}/export?format=csv`
               + (CONFIG.aba?`&gid=${CONFIG.aba}`:"") + `&cb=${Date.now()}`;
@@ -1036,6 +1073,11 @@ async function carregar(){
 
 carregar();
 setInterval(carregar, CONFIG.atualizarMin*60*1000);
+
+/* TV/aba que dormiu suspende o JS — ao voltar a ficar visível, ganhar foco ou recuperar internet, sincroniza na hora */
+document.addEventListener("visibilitychange",()=>{ if (!document.hidden && Date.now()-ultimaBusca>30000) carregar(); });
+window.addEventListener("focus",()=>{ if (Date.now()-ultimaBusca>30000) carregar(); });
+window.addEventListener("online",()=>carregar());
 </script>
 </body>
 </html>
